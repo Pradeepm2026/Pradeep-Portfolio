@@ -10,7 +10,11 @@ const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const uploadsDirectory = path.join(__dirname, 'uploads');
+// Vercel functions have a read-only project directory; only /tmp is writable there.
+const uploadsDirectory = process.env.VERCEL
+  ? path.join('/tmp', 'uploads')
+  : path.join(__dirname, 'uploads');
+const bundledUploadsDirectory = path.join(__dirname, 'uploads');
 const requiredEnvironmentVariables = [
   'MONGODB_URI',
   'ADMIN_USERNAME',
@@ -183,6 +187,10 @@ const momentUpload = multer({
 
 app.use(express.json());
 app.use('/uploads', express.static(uploadsDirectory));
+if (process.env.VERCEL) {
+  // Existing repository images remain readable after deployment.
+  app.use('/uploads', express.static(bundledUploadsDirectory));
+}
 app.use(express.static(__dirname));
 app.use('/api', async (request, response, next) => {
   try {
