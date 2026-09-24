@@ -85,6 +85,20 @@ const portfolioStateSchema = new mongoose.Schema({
 
 const PortfolioState = mongoose.model('PortfolioState', portfolioStateSchema);
 
+let databaseConnection;
+
+function connectDatabase() {
+  if (mongoose.connection.readyState === 1) {
+    return Promise.resolve(mongoose.connection);
+  }
+
+  if (!databaseConnection) {
+    databaseConnection = mongoose.connect(process.env.MONGODB_URI);
+  }
+
+  return databaseConnection;
+}
+
 async function touchPortfolioUpdated() {
   await PortfolioState.findOneAndUpdate(
     { key: 'portfolio-last-updated' },
@@ -170,6 +184,15 @@ const momentUpload = multer({
 app.use(express.json());
 app.use('/uploads', express.static(uploadsDirectory));
 app.use(express.static(__dirname));
+app.use('/api', async (request, response, next) => {
+  try {
+    await connectDatabase();
+    next();
+  } catch (error) {
+    console.error('Database connection failed:', error.message);
+    response.status(503).json({ message: 'Database connection is unavailable. Please try again shortly.' });
+  }
+});
 
 function requireAdmin(request, response, next) {
   const authorization = request.headers.authorization || '';
@@ -514,7 +537,7 @@ app.use((error, request, response, next) => {
 });
 
 async function startServer() {
-  await mongoose.connect(process.env.MONGODB_URI);
+  await connectDatabase();
   console.log('MongoDB connected.');
 
   const projectState = await PortfolioState.findOne({ key: 'projects-initialized' });
@@ -535,7 +558,11 @@ async function startServer() {
   });
 }
 
-startServer().catch((error) => {
-  console.error('Server startup failed:', error.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  startServer().catch((error) => {
+    console.error('Server startup failed:', error.message);
+    process.exit(1);
+  });
+}
+
+module.exports = app;
