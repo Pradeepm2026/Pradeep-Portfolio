@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | Pradeep Portfolio</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <main class="dashboard-shell">
+    <header class="dashboard-header">
+      <div>
+        <p class="eyebrow">PRADEEP PORTFOLIO</p>
+        <h1>Admin Dashboard</h1>
+      </div>
+      <div class="header-actions">
+        <a href="index.html">View Website</a>
+        <button id="logout-button" type="button">Logout</button>
+      </div>
+    </header>
+
+    <section class="dashboard-card">
+      <p class="eyebrow">RESUME MANAGEMENT</p>
+      <h2>Upload a new resume</h2>
+      <p class="description">Upload a PDF up to 5 MB. The portfolio Download Resume button will use the newest uploaded resume.</p>
+      <form id="resume-upload-form">
+        <label for="resume-file">Choose resume PDF</label>
+        <input id="resume-file" name="resume" type="file" accept="application/pdf" required />
+        <button type="submit">Upload Resume</button>
+      </form>
+      <p id="upload-status" class="status" aria-live="polite"></p>
+    </section>
+
+    <section class="dashboard-card">
+      <p class="eyebrow">CURRENT RESUME</p>
+      <div id="current-resume" class="current-resume">Loading current resume...</div>
+    </section>
+
+    <section class="dashboard-card project-management-card">
+      <p class="eyebrow">PROJECT MANAGEMENT</p>
+      <h2>Create a project box</h2>
+      <p class="description">Add a title and short description. It will automatically appear in the Projects section on your portfolio.</p>
+      <form id="project-form">
+        <label for="project-title">Project title</label>
+        <input id="project-title" name="title" type="text" maxlength="100" placeholder="Example: E-commerce Website" required />
+        <label for="project-description">Project description</label>
+        <textarea id="project-description" name="description" rows="4" maxlength="500" placeholder="Write a short description of the project..." required></textarea>
+        <label for="project-url">Project link</label>
+        <input id="project-url" name="projectUrl" type="url" maxlength="2048" placeholder="https://example.com/project" required />
+        <button type="submit">Add Project</button>
+      </form>
+      <p id="project-status" class="status" aria-live="polite"></p>
+      <div class="project-editor">
+        <p class="eyebrow">EDIT OR DELETE A PROJECT</p>
+        <label for="project-selector">Select project</label>
+        <select id="project-selector" disabled>
+          <option>Loading projects...</option>
+        </select>
+        <form id="project-editor-form">
+          <label for="edit-project-title">Project title</label>
+          <input id="edit-project-title" type="text" maxlength="100" required disabled />
+          <label for="edit-project-description">Project description</label>
+          <textarea id="edit-project-description" rows="4" maxlength="500" required disabled></textarea>
+          <label for="edit-project-url">Project link</label>
+          <input id="edit-project-url" type="url" maxlength="2048" required disabled />
+          <div class="project-editor-actions">
+            <button id="save-project-changes" type="submit" disabled>Save Changes</button>
+            <button id="delete-selected-project" class="delete-project-button" type="button" disabled>Delete Project</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="dashboard-card certificate-management-card">
+      <p class="eyebrow">CERTIFICATE MANAGEMENT</p>
+      <h2>Upload or delete a certificate</h2>
+      <p class="description">Upload a JPG, PNG or WEBP certificate image with a short description. Maximum image size: 5 MB.</p>
+      <form id="certificate-upload-form">
+        <label for="certificate-image">Certificate image</label>
+        <input id="certificate-image" name="certificateImage" type="file" accept="image/jpeg,image/png,image/webp" required />
+        <label for="certificate-description">Certificate description</label>
+        <textarea id="certificate-description" name="description" rows="4" maxlength="500" placeholder="Example: Java Programming Certificate from..." required></textarea>
+        <button type="submit">Upload Certificate</button>
+      </form>
+      <p id="certificate-status" class="status" aria-live="polite"></p>
+      <div class="certificate-selector-box">
+        <label for="certificate-selector">Select existing certificate to delete</label>
+        <div class="certificate-delete-row">
+          <select id="certificate-selector" disabled>
+            <option>Loading certificates...</option>
+          </select>
+          <button id="delete-selected-certificate" class="delete-project-button" type="button" disabled>Delete Certificate</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-card certificate-management-card">
+      <p class="eyebrow">MEMORABLE MOMENTS</p><h2>Upload or delete a moment</h2><p class="description">Add up to 10 photos in one moment box. Maximum size: 15 MB per photo.</p>
+      <form id="moment-upload-form"><label for="moment-image">Moment photo</label><input id="moment-image" type="file" accept="image/jpeg,image/png,image/webp" /><button id="add-moment-photo" type="button">Add photo</button><p id="moment-photo-count" class="status">0 of 10 photos added.</p><label for="moment-description">Moment description</label><textarea id="moment-description" name="description" rows="4" maxlength="500" required></textarea><button type="submit">Upload Moments</button></form>
+      <p id="moment-status" class="status" aria-live="polite"></p>
+      <div class="certificate-selector-box"><label for="moment-selector">Select moment to delete</label><div class="certificate-delete-row"><select id="moment-selector" disabled><option>Loading moments...</option></select><button id="delete-selected-moment" class="delete-project-button" type="button" disabled>Delete Moment</button></div></div>
+    </section>
+
+    <section class="dashboard-card messages-management-card">
+      <p class="eyebrow">CONTACT MESSAGES</p>
+      <h2>Messages from visitors</h2>
+      <p class="description">Messages sent through the Contact section of your portfolio appear here.</p>
+      <div id="contact-messages-list" class="contact-messages-list" aria-live="polite">Loading messages...</div>
+    </section>
+  </main>
+  <div id="admin-toast" class="admin-toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <script src="admin.js"></script>
+</body>
+</html>

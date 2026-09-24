@@ -1,0 +1,146 @@
+***** PHASE-1 (Prerequisite) ******
+- Basics (Variables, operators, etc)
+- Functions
+- Array, Object, String
+- DOM Manipulation
+- Promises & APIs
+- Destructuring
+- Modules
+
+
+
+***** PHASE-2 (React Basics) *****
+- CLI Tool:
+    Vite
+    Create React App
+- Folder Structure
+- Components:
+    JSX
+    Props
+    States (useState)
+    Data Flow
+- Hooks
+- Styling
+    CSS
+    Tailwind CSS
+
+
+
+***** PHASE-3 (Rendering) *****
+- Event Handling
+- Life cycle:
+    useEffect
+- Conditional Rendering
+- List Rendering
+    Normal Array
+    Array of Objects
+    Array of Array
+- Refs:
+    useRef
+- Higher Order Components
+
+
+
+***** PHASE-4 (APIs)
+- Fetch
+- Axios
+- React Query
+
+
+
+***** PHASE-5 (Routing)
+- React Router
+- TanStack Router
+
+
+
+***** PHASE-6 (Hooks) *****
+- useState
+- useEffect
+- useRef
+- useLocation
+- useCallback
+- useMemo
+
+
+
+***** PHASE-7 (Advance Powers)
+
+- STATE MANAGEMENT
+    Context API + Reducer
+    Zustand
+    Redux
+    Redux Toolkit
+- STYLING
+    CSS
+    Tailwind CSS
+    Daisy UI
+    Styled Components
+    ShadCN
+    Material UI
+    Ant Design
+    Redux UI
+- ANIMATIONS
+    Gsap
+    React Spring
+    Framer Motion
+- VALIDATION
+    React Hook Form
+    Zod
+    Formik
+    Yup
+- TESTING
+    Jest
+    Vitest
+    React Testing Library
+
+
+
+***** PHASE-8 (PROJECTS) *****
+
+- BEGINNER
+    To-Do List
+    Weather App
+    Calculator
+    Mini E-commerce Store
+    Quiz App
+    Expense Tracker
+    News App
+- INTERMEDIATE
+    Basic E-commerce Store
+    Blog App
+    Chat App
+    Movie App
+    Portfolio Website
+- ADVANCE
+    Advance E-commerce Store
+    LMS
+    Yt Clone
+    Task Management App
+    Social Media Clone
+
+
+
+***** OPTIMIZATIONS ******
+- Performance Optimization
+    useMemo
+    code splitting
+    virtualization
+- Bundle Size Optimization
+- Cost Optimizations
+    Reduce api calls
+    Lazy loads
+    (load only what's needed)
+- SEO
+
+
+
+***** After React *****
+- Next JS
+- React Native (Android)
+- Recommended : Backend
+
+
+
+***** (Optional) *****
+VCS - Git & GitHub
