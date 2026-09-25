@@ -1776,6 +1776,44 @@
   }
 }
 
+/* Compact portfolio cards: three cards fit cleanly across laptop screens. */
+@media (min-width: 1024px) {
+  .certificates-grid,
+  .moments-carousel {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .certificate-image {
+    height: 165px;
+  }
+
+  .moment-card.moment-card-uploaded .moment-image {
+    height: 185px;
+    min-height: 0;
+  }
+
+  .moment-card.moment-card-uploaded .moment-copy {
+    padding: 13px 16px 15px;
+  }
+
+  .moment-card.moment-card-uploaded .moment-copy h3 {
+    font-size: 1.1rem;
+  }
+
+  .moment-card.moment-card-uploaded .moment-copy .moment-number {
+    top: 12px;
+    left: 14px;
+  }
+
+  .moment-card.moment-card-uploaded .moment-like-button {
+    right: 14px;
+    bottom: 12px;
+    padding: 7px 11px;
+    font-size: 0.75rem;
+  }
+}
+
 @media (min-width: 1100px) {
   .project-grid {
     grid-template-columns: repeat(4, 1fr);
