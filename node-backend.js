@@ -1,0 +1,60 @@
+require('dotenv').config();
+const http = require('http');
+const fs = require('fs');
+const fsp = require('fs/promises');
+const path = require('path');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const Busboy = require('busboy');
+
+const required = ['MONGODB_URI', 'ADMIN_USERNAME', 'ADMIN_PASSWORD_HASH', 'JWT_SECRET'];
+const missing = required.filter((key) => !process.env[key]);
+if (missing.length) throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+const uploadDir = process.env.VERCEL ? '/tmp/uploads' : path.join(__dirname, 'uploads');
+const bundledUploads = path.join(__dirname, 'uploads');
+const makeModel = (name, definition) => mongoose.models[name] || mongoose.model(name, new mongoose.Schema(definition, { timestamps: true }));
+const Project = makeModel('Project', { title: String, description: String, projectUrl: String, order: Number });
+const Certificate = makeModel('Certificate', { description: String, originalName: String, fileName: String, imageUrl: String, order: Number });
+const Resume = makeModel('Resume', { originalName: String, fileName: String, fileUrl: String });
+const ContactMessage = makeModel('ContactMessage', { name: String, email: String, message: String });
+const Moment = makeModel('Moment', { description: String, images: [{ originalName: String, fileName: String, imageUrl: String, likes: { type: Number, default: 0 } }], order: Number });
+const State = makeModel('PortfolioState', { key: { type: String, unique: true }, value: { type: Number, default: 0 } });
+let connection;
+const db = () => { if (mongoose.connection.readyState === 1) return Promise.resolve(); if (!connection) connection = mongoose.connect(process.env.MONGODB_URI); return connection; };
+const json = (res, code, data) => { res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(data)); };
+const token = (req) => (req.headers.authorization || '').replace(/^Bearer\s+/, '');
+const admin = (req, res) => { try { jwt.verify(token(req), process.env.JWT_SECRET); return true; } catch { json(res, 401, { message: 'Admin login is required.' }); return false; } };
+const touch = () => State.findOneAndUpdate({ key: 'portfolio-last-updated' }, { value: 1 }, { upsert: true, new: true });
+function body(req) { return new Promise((resolve, reject) => { let value = ''; req.on('data', (chunk) => value += chunk); req.on('end', () => { try { resolve(value ? JSON.parse(value) : {}); } catch { reject(new Error('Invalid JSON.')); } }); req.on('error', reject); }); }
+function multipart(req, max) { return new Promise((resolve, reject) => { const fields = {}; const files = []; const writes = []; const form = Busboy({ headers: req.headers, limits: { files: max, fileSize: 15 * 1024 * 1024 } }); form.on('field', (key, value) => fields[key] = value); form.on('file', (field, stream, info) => { const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']; if (!allowed.includes(info.mimeType)) return stream.resume(); const fileName = `${Date.now()}-${info.filename.replace(/[^a-zA-Z0-9.-]/g, '-')}`; const output = fs.createWriteStream(path.join(uploadDir, fileName)); stream.pipe(output); writes.push(new Promise((ok, fail) => { output.on('finish', ok); output.on('error', fail); })); files.push({ field, originalName: info.filename, fileName, imageUrl: `/uploads/${fileName}`, type: info.mimeType }); }); form.on('error', reject); form.on('finish', async () => { try { await Promise.all(writes); resolve({ fields, files }); } catch (error) { reject(error); } }); req.pipe(form); }); }
+async function file(res, requested) { for (const dir of [uploadDir, bundledUploads]) { try { const name = path.basename(requested); const data = await fsp.readFile(path.join(dir, name)); const ext = path.extname(name); res.writeHead(200, { 'Content-Type': ext === '.pdf' ? 'application/pdf' : ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg' }); res.end(data); return true; } catch {} } return false; }
+function validUrl(value) { try { const url = new URL(value); return ['http:', 'https:'].includes(url.protocol) ? url.toString() : null; } catch { return null; } }
+async function handler(req, res) {
+  const pathname = new URL(req.url, `http://${req.headers.host}`).pathname;
+  try {
+    if (pathname.startsWith('/uploads/')) return (await file(res, pathname)) ? undefined : json(res, 404, { message: 'File not found.' });
+    if (!pathname.startsWith('/api/')) return json(res, 404, { message: 'Not found.' });
+    await fsp.mkdir(uploadDir, { recursive: true }); await db();
+    if (req.method === 'POST' && pathname === '/api/auth/login') { const data = await body(req); if (data.username !== process.env.ADMIN_USERNAME || !(await bcrypt.compare(String(data.password || ''), process.env.ADMIN_PASSWORD_HASH))) return json(res, 401, { message: 'Incorrect username or password.' }); return json(res, 200, { token: jwt.sign({ username: data.username, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '8h' }) }); }
+    if (req.method === 'GET' && pathname === '/api/projects') return json(res, 200, { projects: await Project.find().sort({ order: 1, createdAt: 1 }) });
+    if (req.method === 'GET' && pathname === '/api/certificates') return json(res, 200, { certificates: await Certificate.find().sort({ order: 1, createdAt: 1 }) });
+    if (req.method === 'GET' && pathname === '/api/moments') return json(res, 200, { moments: await Moment.find().sort({ order: 1, createdAt: 1 }) });
+    if (req.method === 'GET' && pathname === '/api/resume/latest') return json(res, 200, { resume: await Resume.findOne().sort({ createdAt: -1 }) });
+    if (pathname === '/api/visitor-count') { const count = req.method === 'POST' ? await State.findOneAndUpdate({ key: 'visitor-count' }, { $inc: { value: 1 } }, { upsert: true, new: true }) : await State.findOne({ key: 'visitor-count' }); const updated = await State.findOne({ key: 'portfolio-last-updated' }); return json(res, 200, { visitorCount: count?.value || 0, lastUpdated: updated?.updatedAt || new Date() }); }
+    if (req.method === 'POST' && pathname === '/api/contact-messages') { const data = await body(req); if (!data.name?.trim() || !data.message?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email || '')) return json(res, 400, { message: 'Enter a valid name, email and message.' }); await ContactMessage.create({ name: data.name.trim(), email: data.email.trim(), message: data.message.trim() }); return json(res, 201, { message: 'Your message has been sent successfully.' }); }
+    if (req.method === 'GET' && pathname === '/api/contact-messages') { if (!admin(req, res)) return; return json(res, 200, { messages: await ContactMessage.find().sort({ createdAt: -1 }) }); }
+    if (req.method === 'POST' && pathname === '/api/projects') { if (!admin(req, res)) return; const data = await body(req); const projectUrl = validUrl(data.projectUrl); if (!data.title?.trim() || !data.description?.trim() || !projectUrl) return json(res, 400, { message: 'Enter valid project details.' }); const project = await Project.create({ title: data.title.trim(), description: data.description.trim(), projectUrl, order: (await Project.countDocuments()) + 1 }); await touch(); return json(res, 201, { message: 'Project created successfully.', project }); }
+    const project = pathname.match(/^\/api\/projects\/([^/]+)$/); if (project && req.method === 'PATCH') { if (!admin(req, res)) return; const data = await body(req); const projectUrl = validUrl(data.projectUrl); const item = await Project.findByIdAndUpdate(project[1], { title: data.title?.trim(), description: data.description?.trim(), projectUrl }, { new: true }); if (!item) return json(res, 404, { message: 'Project not found.' }); await touch(); return json(res, 200, { message: 'Project updated successfully.', project: item }); }
+    if (project && req.method === 'DELETE') { if (!admin(req, res)) return; await Project.findByIdAndDelete(project[1]); await touch(); return json(res, 200, { message: 'Project deleted successfully.' }); }
+    if (req.method === 'POST' && pathname === '/api/certificates') { if (!admin(req, res)) return; const data = await multipart(req, 1); const f = data.files[0]; if (!data.fields.description?.trim() || !f?.type.startsWith('image/')) return json(res, 400, { message: 'Choose a certificate image and description.' }); const certificate = await Certificate.create({ description: data.fields.description.trim(), originalName: f.originalName, fileName: f.fileName, imageUrl: f.imageUrl, order: (await Certificate.countDocuments()) + 1 }); await touch(); return json(res, 201, { message: 'Certificate uploaded successfully.', certificate }); }
+    const certificate = pathname.match(/^\/api\/certificates\/([^/]+)$/); if (certificate && req.method === 'DELETE') { if (!admin(req, res)) return; const item = await Certificate.findByIdAndDelete(certificate[1]); if (!item) return json(res, 404, { message: 'Certificate not found.' }); await touch(); return json(res, 200, { message: 'Certificate deleted successfully.' }); }
+    if (req.method === 'POST' && pathname === '/api/moments') { if (!admin(req, res)) return; const data = await multipart(req, 10); const images = data.files.filter((f) => f.type.startsWith('image/')).map((f) => ({ originalName: f.originalName, fileName: f.fileName, imageUrl: f.imageUrl })); if (!data.fields.description?.trim() || !images.length) return json(res, 400, { message: 'Choose moment photos and description.' }); const moment = await Moment.create({ description: data.fields.description.trim(), images, order: (await Moment.countDocuments()) + 1 }); await touch(); return json(res, 201, { message: 'Moments uploaded successfully.', moment }); }
+    const like = pathname.match(/^\/api\/moments\/([^/]+)\/images\/([^/]+)\/like$/); if (like && req.method === 'POST') { const moment = await Moment.findById(like[1]); const image = moment?.images.id(like[2]); if (!image) return json(res, 404, { message: 'Moment photo not found.' }); image.likes = (image.likes || 0) + 1; await moment.save(); return json(res, 200, { likes: image.likes }); }
+    const moment = pathname.match(/^\/api\/moments\/([^/]+)$/); if (moment && req.method === 'DELETE') { if (!admin(req, res)) return; const item = await Moment.findByIdAndDelete(moment[1]); if (!item) return json(res, 404, { message: 'Moment not found.' }); await touch(); return json(res, 200, { message: 'Moment deleted successfully.' }); }
+    if (req.method === 'POST' && pathname === '/api/resume') { if (!admin(req, res)) return; const data = await multipart(req, 1); const f = data.files[0]; if (!f || f.type !== 'application/pdf') return json(res, 400, { message: 'Please choose a PDF resume file.' }); const resume = await Resume.create({ originalName: f.originalName, fileName: f.fileName, fileUrl: f.imageUrl }); await touch(); return json(res, 201, { message: 'Resume uploaded successfully.', resume }); }
+    return json(res, 404, { message: 'API route not found.' });
+  } catch (error) { console.error(error); return json(res, 500, { message: 'Server error. Please try again.' }); }
+}
+if (require.main === module) db().then(() => http.createServer(handler).listen(process.env.PORT || 3000)).catch((error) => { console.error(error); process.exit(1); });
+module.exports = handler;

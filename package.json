@@ -3,15 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node node-backend.js",
+    "dev": "node node-backend.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "busboy": "^1.6.0",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.9.5",
-    "multer": "^2.0.2"
+    "mongoose": "^8.9.5"
   }
 }
