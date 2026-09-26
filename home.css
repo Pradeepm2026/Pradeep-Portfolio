@@ -1245,6 +1245,65 @@
   background: #2d7b4b;
 }
 
+.preview-photo-nav {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  padding: 0 0 5px;
+  border: 1px solid #e5c66d;
+  border-radius: 50%;
+  color: #fff3cc;
+  background: #153d2beF;
+  box-shadow: 0 5px 18px #0009;
+  font-size: 2.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.preview-photo-nav[hidden] {
+  display: none;
+}
+
+.preview-photo-nav:hover,
+.preview-photo-nav:focus-visible {
+  background: #26704a;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.preview-photo-previous {
+  left: 14px;
+}
+
+.preview-photo-next {
+  right: 14px;
+}
+
+@media (max-width: 600px) {
+  .certificate-preview-modal {
+    padding: 12px;
+  }
+
+  .preview-photo-nav {
+    width: 38px;
+    height: 38px;
+    font-size: 1.9rem;
+  }
+
+  .preview-photo-previous {
+    left: 8px;
+  }
+
+  .preview-photo-next {
+    right: 8px;
+  }
+}
+
 .certificate-copy h3 {
   max-width: 25ch;
   color: #fff2cc;

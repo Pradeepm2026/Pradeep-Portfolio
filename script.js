@@ -116,6 +116,10 @@ async function loadFooterStats() {
 loadFooterStats();
 const certificatePreviewImage = document.querySelector('#certificate-preview-image');
 const closeCertificatePreviewButton = document.querySelector('#close-certificate-preview');
+const previewPreviousPhotoButton = document.querySelector('#preview-previous-photo');
+const previewNextPhotoButton = document.querySelector('#preview-next-photo');
+let previewPhotoGallery = [];
+let previewPhotoIndex = 0;
 const adminPasswordInput = document.querySelector('#admin-password');
 const toggleAdminPasswordButton = document.querySelector('#toggle-admin-password');
 
@@ -304,16 +308,31 @@ function createCertificateCard(certificate, index) {
     return card;
 }
 
-function openCertificatePreview(imageUrl, description) {
+function openCertificatePreview(imageUrl, description, gallery = [], photoIndex = 0) {
+    previewPhotoGallery = gallery;
+    previewPhotoIndex = photoIndex;
     certificatePreviewImage.src = imageUrl;
     certificatePreviewImage.alt = description;
+    const showGalleryControls = gallery.length > 1;
+    previewPreviousPhotoButton.hidden = !showGalleryControls;
+    previewNextPhotoButton.hidden = !showGalleryControls;
     certificatePreviewModal.hidden = false;
     document.body.classList.add('no-scroll');
+}
+
+function changePreviewPhoto(direction) {
+    if (previewPhotoGallery.length < 2) return;
+    previewPhotoIndex = (previewPhotoIndex + direction + previewPhotoGallery.length) % previewPhotoGallery.length;
+    const photo = previewPhotoGallery[previewPhotoIndex];
+    certificatePreviewImage.src = photo.imageUrl;
 }
 
 function closeCertificatePreview() {
     certificatePreviewModal.hidden = true;
     certificatePreviewImage.removeAttribute('src');
+    previewPhotoGallery = [];
+    previewPreviousPhotoButton.hidden = true;
+    previewNextPhotoButton.hidden = true;
     document.body.classList.remove('no-scroll');
 }
 
@@ -360,7 +379,7 @@ function renderMoment() {
         const photo = images[photoIndex % images.length];
         card.className = 'moment-card moment-card-uploaded';
         image.src = photo.imageUrl; image.alt = moment.description; image.className = 'moment-image';
-        image.addEventListener('click', () => openCertificatePreview(image.src, moment.description));
+        image.addEventListener('click', () => openCertificatePreview(photo.imageUrl, moment.description, images, photoIndex));
         number.className = 'moment-number'; number.textContent = String(momentIndex + 1).padStart(2, '0');
         description.textContent = moment.description;
         likeButton.className = 'moment-like-button'; likeButton.type = 'button'; likeButton.textContent = `♥ Like (${photo.likes || 0})`;
@@ -395,6 +414,8 @@ nextMomentButton?.addEventListener('click', () => { const images = savedMoments[
 loadMoments();
 
 closeCertificatePreviewButton?.addEventListener('click', closeCertificatePreview);
+previewPreviousPhotoButton?.addEventListener('click', () => changePreviewPhoto(-1));
+previewNextPhotoButton?.addEventListener('click', () => changePreviewPhoto(1));
 
 certificatePreviewModal?.addEventListener('click', (event) => {
     if (event.target === certificatePreviewModal) {
@@ -405,5 +426,9 @@ certificatePreviewModal?.addEventListener('click', (event) => {
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && certificatePreviewModal && !certificatePreviewModal.hidden) {
         closeCertificatePreview();
+    }
+    if (certificatePreviewModal && !certificatePreviewModal.hidden) {
+        if (event.key === 'ArrowLeft') changePreviewPhoto(-1);
+        if (event.key === 'ArrowRight') changePreviewPhoto(1);
     }
 });
