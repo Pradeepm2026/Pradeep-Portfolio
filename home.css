@@ -1404,8 +1404,29 @@
 .moment-copy { padding:18px 26px 22px; background:linear-gradient(145deg,#201a0e,#0e0e0c); }
 .moment-copy .moment-number { margin-bottom:13px; }
 .moment-copy h3 { max-width:none; margin:0; }
-.moment-like-button { margin-top:16px; padding:10px 17px; border:1px solid #d3ad54; border-radius:999px; color:#fff5d8; background:#1b5736; font-weight:800; cursor:pointer; }
-.moment-like-button:hover { background:#2d7b4b; transform:translateY(-2px); }
+.moment-like-button {
+  margin-top: 16px;
+  padding: 10px 17px;
+  border: 1px solid #c55a5a;
+  border-radius: 999px;
+  color: #ffe9e9;
+  background: #7b2424;
+  box-shadow: 0 5px 14px #4d080842;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+.moment-like-button:hover {
+  border-color: #ff8b8b;
+  background: #cf3434;
+  box-shadow: 0 8px 20px #b51f1f5c;
+  transform: translateY(-2px);
+}
+.moment-like-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
 .moment-nav { flex:0 0 44px; width:44px; height:44px; border:1px solid #b88a32; border-radius:50%; color:#fff2cf; background:#1c4d31; font-size:2rem; line-height:1; cursor:pointer; }
 .moment-nav:hover { background:#2d7b4b; }
 .moment-nav:disabled { opacity:.35; cursor:not-allowed; }
@@ -1520,6 +1541,7 @@
 .moment-card.moment-card-uploaded .moment-copy h3 {
   max-width: none;
   margin: 0;
+  padding-right: 130px;
 }
 
 .moment-card.moment-card-uploaded .moment-copy .moment-number {
@@ -1858,6 +1880,7 @@
 
   .moment-card.moment-card-uploaded .moment-copy h3 {
     font-size: 1.1rem;
+    padding-right: 105px;
   }
 
   .moment-card.moment-card-uploaded .moment-copy .moment-number {
