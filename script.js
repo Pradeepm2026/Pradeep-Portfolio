@@ -383,7 +383,20 @@ function renderMoment() {
         number.className = 'moment-number'; number.textContent = String(momentIndex + 1).padStart(2, '0');
         description.textContent = moment.description;
         likeButton.className = 'moment-like-button'; likeButton.type = 'button'; likeButton.textContent = `♥ Like (${photo.likes || 0})`;
-        likeButton.addEventListener('click', async () => { if (!photo._id) return; const response = await fetch(`/api/moments/${moment._id}/images/${photo._id}/like`, { method: 'POST' }); if (response.ok) { photo.likes = (await response.json()).likes; renderMoment(); } });
+        likeButton.addEventListener('click', async () => {
+            if (!photo._id || likeButton.disabled) return;
+            likeButton.disabled = true;
+            try {
+                const response = await fetch(`/api/moments/${moment._id}/images/${photo._id}/like`, { method: 'POST' });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Like could not be saved.');
+                photo.likes = result.likes;
+                renderMoment();
+            } catch (error) {
+                likeButton.disabled = false;
+                alert(error.message || 'Like could not be saved. Please try again.');
+            }
+        });
         previousButton.className = 'moment-photo-nav previous-photo'; previousButton.type = 'button'; previousButton.textContent = '‹'; previousButton.disabled = images.length < 2;
         nextButton.className = 'moment-photo-nav next-photo'; nextButton.type = 'button'; nextButton.textContent = '›'; nextButton.disabled = images.length < 2;
         previousButton.addEventListener('click', () => { momentPhotoIndexes[moment._id] = (photoIndex - 1 + images.length) % images.length; renderMoment(); });
